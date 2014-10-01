@@ -1,0 +1,25 @@
+---
+- hosts: all
+  remote_user: root
+  vars:
+    user_name: dwight
+  tasks:
+    - name: update/upgrade
+      apt: upgrade=dist update_cache=yes cache_valid_time=3600
+    - apt: name="{{ item }}"
+      with_items:
+        - git
+        - zsh
+        - vim
+        - build-essential
+        - cmake
+        - python-dev
+    - name: Create non-root user
+      user: name={{ user_name }} comment='{{ user_name }}' groups=sudo append=yes shell=/bin/zsh
+    - name: nopassword sudo
+      lineinfile: dest=/etc/sudoers state=present regexp='^%sudo ALL\=' line='%sudo ALL=(ALL) NOPASSWD:ALL' validate='visudo -cf %s'
+    - name: Set up authorized_keys for the deploy user
+      authorized_key: user={{ user_name }}
+                      key="{{ item }}"
+      with_file:
+      - public-key

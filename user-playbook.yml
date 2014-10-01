@@ -1,0 +1,20 @@
+---
+- hosts: all
+  remote_user: dwight
+  sudo: yes
+  sudo_user: dwight
+  vars:
+    castles:
+      vimrc: anonfunc/vimrc
+      zshrc: anonfunc/zshrc
+  tasks:
+  - name: Checkout the HomeSHick Git
+    git: repo=git://github.com/andsens/homeshick.git dest=/home/dwight/.homesick/repos/homeshick version=testing
+  - name: Update bashrc to have homeshick initialization
+    lineinfile: dest=/home/dwight/.bashrc line="source $HOME/.homesick/repos/homeshick/homeshick.sh" regexp='homeshick'
+  - name: Set up other homeshick castles
+    git: repo="{{ item.repo }}" dest=/home/"{{ sudo_user }}"/.homesick/repos/"{{ item.key }}"
+    with_dict: castles
+  - name: Link castles
+    command: /home/"{{ sudo_user }}"/.homesick/repos/homeshick/bin/homeshick link {{ item.key }} -f -q
+    with_dict: castles
